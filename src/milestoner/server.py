@@ -6,10 +6,16 @@ from mcp.types import Resource, TextContent, Tool
 
 from .config.store import get_post_history
 from .platforms.registry import list_platforms
+from .scheduling import get_optimal_times
 from .tools.configure import configure, get_configuration_status
 from .tools.draft_update import draft_update
 from .tools.list_activity import list_activity
 from .tools.post_update import post_update
+from .tools.schedule_post import (
+    cancel_scheduled_post,
+    list_scheduled_posts,
+    schedule_post,
+)
 
 server = Server("milestoner")
 
@@ -112,6 +118,63 @@ async def handle_list_tools() -> list[Tool]:
                 "required": ["platform"],
             },
         ),
+        Tool(
+            name="schedule_post",
+            description="Schedule a post for later at an optimal time",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "description": "The content to post",
+                    },
+                    "scheduled_for": {
+                        "type": "string",
+                        "description": "ISO datetime when to post (e.g., '2025-01-15T10:00:00')",
+                    },
+                    "platform": {
+                        "type": "string",
+                        "description": f"Target platform ({', '.join(list_platforms())})",
+                    },
+                    "use_optimal_time": {
+                        "type": "boolean",
+                        "description": "Schedule for the next optimal posting time",
+                        "default": False,
+                    },
+                },
+                "required": ["content"],
+            },
+        ),
+        Tool(
+            name="list_scheduled_posts",
+            description="List all pending scheduled posts and upcoming optimal times",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
+        Tool(
+            name="cancel_scheduled_post",
+            description="Cancel a scheduled post",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "post_id": {
+                        "type": "string",
+                        "description": "The ID of the scheduled post to cancel",
+                    },
+                },
+                "required": ["post_id"],
+            },
+        ),
+        Tool(
+            name="get_optimal_times",
+            description="Get optimal posting times based on engagement research",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
     ]
 
 
@@ -142,6 +205,19 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         set_default = arguments.get("set_default", True)
         credentials = {k: v for k, v in arguments.items() if k not in ["platform", "set_default"]}
         result = configure(platform=platform, set_default=set_default, **credentials)
+    elif name == "schedule_post":
+        result = schedule_post(
+            content=arguments["content"],
+            scheduled_for=arguments.get("scheduled_for"),
+            platform=arguments.get("platform"),
+            use_optimal_time=arguments.get("use_optimal_time", False),
+        )
+    elif name == "list_scheduled_posts":
+        result = list_scheduled_posts()
+    elif name == "cancel_scheduled_post":
+        result = cancel_scheduled_post(post_id=arguments["post_id"])
+    elif name == "get_optimal_times":
+        result = get_optimal_times()
     else:
         result = {"error": f"Unknown tool: {name}"}
 

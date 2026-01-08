@@ -2,6 +2,7 @@ from typing import Any
 
 from ..git.history import format_commits_for_display, get_activity_summary, get_commits
 from ..platforms.registry import get_platform, list_platforms
+from ..scheduling import get_optimal_times
 
 
 def draft_update(
@@ -64,6 +65,9 @@ def draft_update(
         "storytelling": "Tell the journey. The problem, the struggle, the solution.",
     }
 
+    # Get optimal posting times
+    optimal_times = get_optimal_times()
+
     return {
         "platform": platform,
         "character_limit": char_limit,
@@ -74,6 +78,7 @@ def draft_update(
             "commits": formatted_commits[:10],  # Limit to 10 most recent
             "summary": summary,
         },
+        "optimal_posting": optimal_times,
         "instructions": (
             f"Generate a {platform} post ({char_limit} char max) based on this git activity. "
             f"Style: {style}. "

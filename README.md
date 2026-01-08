@@ -15,7 +15,7 @@ When you hit a milestone while coding, ask your AI assistant to draft and post a
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/milestoner.git
+git clone https://github.com/J3r3my97/milestoner.git
 cd milestoner
 
 # Install with uv
@@ -109,6 +109,18 @@ The assistant will use `draft_update` to get git context, then generate a post f
 
 The assistant will use `post_update` to publish your content and return a link to the live post.
 
+### Schedule for optimal times
+
+> "Schedule this post for the best time today"
+
+The assistant will use `schedule_post` with `use_optimal_time: true` to queue your post for peak engagement (e.g., Wednesday 10 AM, weekday mornings).
+
+### Check optimal posting times
+
+> "When's the best time to post today?"
+
+The assistant will use `get_optimal_times` to show you the best times based on engagement research.
+
 ## Tools
 
 ### `list_activity`
@@ -147,6 +159,35 @@ Sets up credentials for a platform.
 - `handle`: Your handle on the platform
 - `app_password`: App password for authentication
 - `set_default` (optional): Set this as the default platform (default: true)
+
+### `schedule_post`
+
+Schedule a post for later at an optimal time.
+
+**Inputs:**
+- `content` (required): The content to post
+- `scheduled_for` (optional): ISO datetime for when to post (e.g., "2025-01-15T10:00:00")
+- `platform` (optional): Target platform (defaults to configured default)
+- `use_optimal_time` (optional): Schedule for the next optimal posting time
+
+### `list_scheduled_posts`
+
+List all pending scheduled posts and upcoming optimal times.
+
+### `cancel_scheduled_post`
+
+Cancel a scheduled post.
+
+**Inputs:**
+- `post_id` (required): The ID of the scheduled post to cancel
+
+### `get_optimal_times`
+
+Get optimal posting times based on engagement research. Returns:
+- Current time quality assessment
+- Recommended posting times for today and tomorrow
+- Best time this week (Wednesday 10 AM)
+- Times to avoid
 
 ## Resources
 
