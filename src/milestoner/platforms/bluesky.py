@@ -1,9 +1,43 @@
+import re
 from typing import Any
 
 from atproto import Client
 from atproto.exceptions import AtProtocolError
 
 from .base import Platform
+
+
+def parse_facets(text: str) -> list[dict[str, Any]]:
+    """Parse URLs and hashtags from text to create Bluesky facets."""
+    facets = []
+
+    # Find URLs
+    url_pattern = r"https?://[^\s]+"
+    for match in re.finditer(url_pattern, text):
+        url = match.group(0)
+        start = len(text[: match.start()].encode("utf-8"))
+        end = len(text[: match.end()].encode("utf-8"))
+        facets.append(
+            {
+                "index": {"byteStart": start, "byteEnd": end},
+                "features": [{"$type": "app.bsky.richtext.facet#link", "uri": url}],
+            }
+        )
+
+    # Find hashtags
+    hashtag_pattern = r"#(\w+)"
+    for match in re.finditer(hashtag_pattern, text):
+        tag = match.group(1)
+        start = len(text[: match.start()].encode("utf-8"))
+        end = len(text[: match.end()].encode("utf-8"))
+        facets.append(
+            {
+                "index": {"byteStart": start, "byteEnd": end},
+                "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag}],
+            }
+        )
+
+    return facets
 
 
 class BlueskyPlatform(Platform):
@@ -52,7 +86,10 @@ class BlueskyPlatform(Platform):
             }
 
         try:
-            response = self._client.send_post(text=content)
+            # Parse facets for clickable links and hashtags
+            facets = parse_facets(content)
+
+            response = self._client.send_post(text=content, facets=facets if facets else None)
             # Build the URL to the post
             # Format: https://bsky.app/profile/{handle}/post/{rkey}
             uri = response.uri  # at://did:plc:xxx/app.bsky.feed.post/rkey
